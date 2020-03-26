@@ -1,0 +1,40 @@
+#!/bin/sh
+
+set -o errexit
+set -o nounset
+
+
+mysql_ready() {
+python << END
+
+import sys
+import time
+import os
+
+from MySQLdb import _mysql
+
+dbuser = os.getenv('MYSQL_USER')
+dbpassword = os.getenv('MYSQL_PASSWORD')
+dbhost = os.getenv('MYSQL_HOST')
+
+try:
+	db =_mysql.connect(host=dbhost,user=dbuser, passwd=dbpassword)
+
+except Exception as ex:
+	print(ex)
+	sys.exit(-1)
+sys.exit(0)
+
+END
+}
+
+
+until mysql_ready; do
+  >&2 echo 'Waiting for Maria DB to become available...'
+  sleep 1
+done
+>&2 echo 'Maria DB is available'
+
+
+exec "$@"
+

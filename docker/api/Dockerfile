@@ -1,9 +1,21 @@
-FROM python:3.7
+FROM python:3.8
+
+RUN pip install pipenv
+
+ADD Pipfile .
+RUN pipenv check
+RUN cd /tmp && pipenv lock --requirements > requirements.txt
+RUN pip install -r /tmp/requirements.txt
+
+
+COPY entrypoint .
+RUN sed -i 's/\r//' /entrypoint
+RUN chmod +x /entrypoint
+
+COPY start .
+RUN sed -i 's/\r//' /start
+RUN chmod +x /start
+
 
 WORKDIR /usr/src/server
-ADD requirements.txt .
-# requirements.txtにリストされたパッケージをインストールする
-RUN pip install --trusted-host pypi.python.org -r requirements.txt
-
-# FastAPIを8000ポートで待機
-CMD ["uvicorn", "main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
+ENTRYPOINT ["/entrypoint"]
